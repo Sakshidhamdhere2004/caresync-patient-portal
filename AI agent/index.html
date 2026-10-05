@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital AI System</title>
+  <style>
+    /* Basic styling for the page */
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a237e; }
+    h2 { color: #283593; }
+    select, button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
+    button { background-color: #1a237e; color: white; border: none; border-radius: 4px; }
+    button:hover { background-color: #283593; }
+    .result-box { border: 1px solid #ccc; padding: 15px; margin-top: 10px; border-radius: 4px; }
+    /* AI Agent badge styling */
+    .agent-badge {
+      display: inline-block;
+      background-color: #ff6f00;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .agent-result { background-color: #fff8e1; border-left: 4px solid #ff6f00; padding: 10px; }
+    .ward-select { padding: 8px; font-size: 15px; margin: 5px; }
+    #triage-result { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+ 
+  <h1>Hospital AI System</h1>
+ 
+  <!-- ===================== -->
+  <!-- SECTION 1: Triage (from Day 10) -->
+  <!-- ===================== -->
+  <h2>Patient Triage</h2>
+  <label>Select Patient:</label>
+  <select id="patient-select">
+    <option value="">-- Loading patients... --</option>
+  </select>
+  <button onclick="runTriage()">Run AI Triage</button>
+  <div class="result-box" id="triage-result">Triage result will appear here.</div>
+ 
+  <!-- ===================== -->
+  <!-- SECTION 2: Bed Agent (New in Day 11) -->
+  <!-- ===================== -->
+  <h2>Bed Availability - AI Agent</h2>
+  <p>Select a patient and a ward. The AI Agent will find an empty bed and assign it.</p>
+ 
+  <label>Patient:</label>
+  <select id="agent-patient-select">
+    <option value="">-- Select patient --</option>
+  </select>
+ 
+  <label>Ward:</label>
+  <select id="ward-select" class="ward-select">
+    <option value="General">General</option>
+    <option value="Emergency">Emergency</option>
+    <option value="ICU">ICU</option>
+    <option value="Pediatric">Pediatric</option>
+    <option value="Maternity">Maternity</option>
+  </select>
+ 
+  <button onclick="runBedAgent()">Assign Bed with AI Agent</button>
+ 
+  <!-- Result box for AI agent -->
+  <div class="result-box" id="agent-result">
+    Agent result will appear here after you click the button.
+  </div>
+ 
+  <script>
+    // ================================================
+    // LOAD PATIENTS: Fill the dropdowns when page opens
+    // ================================================
+    async function loadPatients() {
+      const response = await fetch("/patients");
+      const patients = await response.json();
+ 
+      // Fill both dropdowns with patient names
+      const select1 = document.getElementById("patient-select");
+      const select2 = document.getElementById("agent-patient-select");
+ 
+      patients.forEach(patient => {
+        const option1 = new Option(`${patient.id} - ${patient.name}`, patient.id);
+        const option2 = new Option(`${patient.id} - ${patient.name}`, patient.id);
+        select1.add(option1);
+        select2.add(option2);
+      });
+    }
+ 
+    // ================================================
+    // RUN TRIAGE (from Day 10, no change)
+    // ================================================
+    async function runTriage() {
+      const patientId = document.getElementById("patient-select").value;
+      if (!patientId) { alert("Please select a patient first."); return; }
+ 
+      const resultDiv = document.getElementById("triage-result");
+      resultDiv.textContent = "Running AI triage, please wait...";
+ 
+      try {
+        const response = await fetch(`/triage/${patientId}`, { method: "POST" });
+        const data = await response.json();
+        if (data.result) {
+          resultDiv.textContent = data.result;
+        } else {
+          resultDiv.textContent = "Error: " + JSON.stringify(data);
+        }
+      } catch (err) {
+        resultDiv.textContent = "Error: " + err.message;
+      }
+    }
+ 
+    // ================================================
+    // RUN BED AGENT (New for Day 11)
+    // ================================================
+    async function runBedAgent() {
+      const patientId = document.getElementById("agent-patient-select").value;
+      const ward = document.getElementById("ward-select").value;
+ 
+      if (!patientId) { alert("Please select a patient first."); return; }
+ 
+      const resultDiv = document.getElementById("agent-result");
+      resultDiv.innerHTML = "AI Agent is running... This may take 5 to 10 seconds.";
+ 
+      try {
+        // Call the agent endpoint on FastAPI
+        const response = await fetch("/agent/assign_bed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            patient_id: parseInt(patientId),
+            ward: ward
+          })
+        });
+ 
+        const data = await response.json();
+ 
+        // Show result with the AI AGENT badge
+        resultDiv.innerHTML = `
+          <span class="agent-badge">DATA FROM AI AGENT</span>
+          <div class="agent-result">${data.result || JSON.stringify(data)}</div>
+        `;
+ 
+      } catch (err) {
+        resultDiv.innerHTML = "Error: " + err.message;
+      }
+    }
+ 
+    // Load patients when page first opens
+    loadPatients();
+  </script>
+ 
+</body>
+</html>
+

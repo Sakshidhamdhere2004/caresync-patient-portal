@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hospital AI System</title>
+
+  <style>
+
+    /* =========================================
+       BASIC PAGE
+    ========================================= */
+
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #ffffff;
+      color: #111;
+    }
+
+    h1 {
+      color: #1a237e;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #283593;
+    }
+
+    label {
+      font-weight: 500;
+    }
+
+    select,
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    select {
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      background: white;
+    }
+
+    button {
+      background-color: #1a237e;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #283593;
+    }
+
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+
+
+    /* =========================================
+       RESULT BOX
+    ========================================= */
+
+    .result-box {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 4px;
+      min-height: 30px;
+    }
+
+
+    /* =========================================
+       AI AGENT
+    ========================================= */
+
+    .agent-badge {
+      display: inline-block;
+      background-color: #ff6f00;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .agent-result {
+      background-color: #fff8e1;
+      border-left: 4px solid #ff6f00;
+      padding: 12px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .ward-select {
+      padding: 8px;
+      font-size: 15px;
+      margin: 5px;
+    }
+
+    #triage-result {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+
+    /* =========================================
+       SECTION
+    ========================================= */
+
+    .summary-section {
+      margin: 40px 0;
+    }
+
+    .summary-section h2 {
+      color: #243a9b;
+      font-size: 32px;
+      margin-bottom: 18px;
+    }
+
+
+    /* =========================================
+       DISCHARGE SUMMARY CARD
+    ========================================= */
+
+    .summary-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 25px;
+      line-height: 1.7;
+      box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+    }
+
+    .summary-card p {
+      margin: 14px 0;
+    }
+
+    .summary-card strong {
+      color: #111;
+    }
+
+    .selected-patient {
+      color: #1a237e;
+      font-weight: bold;
+    }
+
+
+    /* =========================================
+       AUTO DISCHARGE
+    ========================================= */
+
+    .auto-discharge {
+      background: #fff8df;
+      border-left: 6px solid #ff7200;
+      transition: all 0.3s ease;
+    }
+
+    .auto-discharge-success {
+      background: #e8f5e9;
+      border-left: 6px solid #2e7d32;
+    }
+
+    .status-warning {
+      color: #c45a00;
+      font-weight: bold;
+    }
+
+    .status-success {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    #auto-discharge-agent-result {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    #auto-discharge-note {
+      color: #555;
+      font-size: 14px;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+    }
+
+
+    /* =========================================
+       ASSIGNMENT DETAILS
+    ========================================= */
+
+    .assignment-details {
+      display: none;
+      margin-top: 20px;
+      padding: 18px;
+      background: #f5f7ff;
+      border: 1px solid #d7dcf5;
+      border-radius: 8px;
+    }
+
+    .assignment-details h3 {
+      margin-top: 0;
+      color: #243a9b;
+    }
+
+    .assignment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .assignment-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .assignment-label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .assignment-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1a237e;
+    }
+
+
+    /* =========================================
+       ERROR
+    ========================================= */
+
+    .error-message {
+      background: #ffebee;
+      color: #b71c1c;
+      border-left: 4px solid #d32f2f;
+      padding: 12px;
+    }
+
+
+    /* =========================================
+       SUCCESS MESSAGE
+    ========================================= */
+
+    .success-message {
+      background: #e8f5e9;
+      color: #1b5e20;
+      border-left: 4px solid #2e7d32;
+      padding: 12px;
+    }
+
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 700px) {
+
+      body {
+        margin: 20px auto;
+        padding: 0 12px;
+      }
+
+      .assignment-grid {
+        grid-template-columns: 1fr;
+      }
+
+      select,
+      button {
+        width: 100%;
+        margin: 5px 0;
+      }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <h1>Hospital AI System</h1>
+
+
+  <!-- =====================================================
+       SECTION 1: PATIENT TRIAGE
+  ====================================================== -->
+
+  <h2>Patient Triage</h2>
+
+  <label>
+    Select Patient:
+  </label>
+
+  <select id="patient-select">
+
+    <option value="">
+      -- Loading patients... --
+    </option>
+
+  </select>
+
+  <button onclick="runTriage()">
+    Run AI Triage
+  </button>
+
+
+  <div
+    class="result-box"
+    id="triage-result">
+
+    Triage result will appear here.
+
+  </div>
+
+
+
+  <!-- =====================================================
+       SECTION 2: BED AVAILABILITY AI AGENT
+  ====================================================== -->
+
+  <h2>Bed Availability - AI Agent</h2>
+
+  <p>
+    Select a patient in Patient Triage and select a ward.
+    The same patient will automatically be used for bed allocation.
+  </p>
+
+
+  <label>
+    Patient:
+  </label>
+
+  <select id="agent-patient-select">
+
+    <option value="">
+      -- Select patient --
+    </option>
+
+  </select>
+
+
+  <label>
+    Ward:
+  </label>
+
+  <select
+    id="ward-select"
+    class="ward-select">
+
+    <option value="General">
+      General
+    </option>
+
+    <option value="Emergency">
+      Emergency
+    </option>
+
+    <option value="ICU">
+      ICU
+    </option>
+
+    <option value="Pediatric">
+      Pediatric
+    </option>
+
+    <option value="Maternity">
+      Maternity
+    </option>
+
+  </select>
+
+
+  <button onclick="runBedAgent()">
+    Assign Bed with AI Agent
+  </button>
+
+
+  <!-- AI Agent Result -->
+
+  <div
+    class="result-box"
+    id="agent-result">
+
+    Agent result will appear here after you click the button.
+
+  </div>
+
+
+
+  <!-- =====================================================
+       ASSIGNMENT DETAILS
+  ====================================================== -->
+
+  <div
+    class="assignment-details"
+    id="assignment-details">
+
+    <h3>
+      Bed Assignment Details
+    </h3>
+
+    <div class="assignment-grid">
+
+      <div class="assignment-item">
+
+        <span class="assignment-label">
+          Patient
+        </span>
+
+        <span
+          class="assignment-value"
+          id="assignment-patient">
+          -
+        </span>
+
+      </div>
+
+
+      <div class="assignment-item">
+
+        <span class="assignment-label">
+          Ward
+        </span>
+
+        <span
+          class="assignment-value"
+          id="assignment-ward">
+          -
+        </span>
+
+      </div>
+
+
+      <div class="assignment-item">
+
+        <span class="assignment-label">
+          Bed
+        </span>
+
+        <span
+          class="assignment-value"
+          id="assignment-bed">
+          -
+        </span>
+
+      </div>
+
+
+      <div class="assignment-item">
+
+        <span class="assignment-label">
+          Nurse
+        </span>
+
+        <span
+          class="assignment-value"
+          id="assignment-nurse">
+          -
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       DISCHARGE SUMMARY
+  ====================================================== -->
+
+  <div class="summary-section">
+
+    <h2>
+      Discharge Summary
+    </h2>
+
+
+    <div class="summary-card">
+
+      <p>
+
+        <strong>
+          Patient:
+        </strong>
+
+        <span
+          id="discharge-patient"
+          class="selected-patient">
+
+          No patient selected
+
+        </span>
+
+      </p>
+
+
+      <p>
+        <strong>
+          Reason for Evaluation:
+        </strong>
+      </p>
+
+      <p id="discharge-reason">
+
+        Patient information will appear here
+        after patient selection.
+
+      </p>
+
+
+      <p>
+        <strong>
+          Clinical Summary:
+        </strong>
+      </p>
+
+      <p id="clinical-summary">
+
+        Clinical summary will appear here.
+
+      </p>
+
+
+      <p>
+        <strong>
+          Disposition:
+        </strong>
+      </p>
+
+      <p id="disposition">
+
+        Disposition information will appear here.
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Recommended Specialty:
+        </strong>
+
+        <span id="recommended-specialty">
+
+          Not available
+
+        </span>
+
+      </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       AUTO-DISCHARGE SUMMARY
+  ====================================================== -->
+
+  <div class="summary-section">
+
+    <h2>
+      Auto-Discharge Summary
+    </h2>
+
+
+    <div
+      class="summary-card auto-discharge"
+      id="auto-discharge-card">
+
+
+      <p>
+
+        <strong>
+          Patient:
+        </strong>
+
+        <span
+          id="auto-discharge-patient"
+          class="selected-patient">
+
+          No patient selected
+
+        </span>
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Disposition:
+        </strong>
+
+      </p>
+
+      <p id="auto-discharge-disposition">
+
+        Auto-discharge information will appear here.
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          AI Agent Result:
+        </strong>
+
+      </p>
+
+      <p id="auto-discharge-agent-result">
+
+        AI Agent result will appear here.
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Status:
+        </strong>
+
+      </p>
+
+      <p
+        id="auto-discharge-status"
+        class="status-warning">
+
+        No discharge action performed.
+
+      </p>
+
+
+      <p id="auto-discharge-note">
+
+        This is an automatically generated system summary
+        based on the AI bed-allocation result.
+        Final clinical disposition must be confirmed
+        by the treating medical team.
+
+      </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
+
+  <script>
+
+
+    /* =====================================================
+       GLOBAL DATA
+    ====================================================== */
+
+    let currentPatient = null;
+    let currentTriageResult = "";
+    let currentBedAssignment = null;
+
+
+
+    /* =====================================================
+       LOAD PATIENTS
+    ====================================================== */
+
+    async function loadPatients() {
+
+      try {
+
+        const response =
+          await fetch("/patients");
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP ${response.status}`
+          );
+
+        }
+
+
+        const patients =
+          await response.json();
+
+
+        const select1 =
+          document.getElementById(
+            "patient-select"
+          );
+
+
+        const select2 =
+          document.getElementById(
+            "agent-patient-select"
+          );
+
+
+        select1.innerHTML =
+          '<option value="">-- Select patient --</option>';
+
+
+        select2.innerHTML =
+          '<option value="">-- Select patient --</option>';
+
+
+        patients.forEach(patient => {
+
+          const option1 =
+            new Option(
+              `${patient.id} - ${patient.name}`,
+              patient.id
+            );
+
+
+          const option2 =
+            new Option(
+              `${patient.id} - ${patient.name}`,
+              patient.id
+            );
+
+
+          select1.add(option1);
+
+          select2.add(option2);
+
+        });
+
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Error loading patients:",
+          error
+        );
+
+
+        document.getElementById(
+          "patient-select"
+        ).innerHTML =
+          '<option value="">Error loading patients</option>';
+
+
+        document.getElementById(
+          "agent-patient-select"
+        ).innerHTML =
+          '<option value="">Error loading patients</option>';
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       PATIENT SELECTION
+    ====================================================== */
+
+    document
+      .getElementById("patient-select")
+      .addEventListener(
+        "change",
+        function () {
+
+          const selectedPatientId =
+            this.value;
+
+
+          document
+            .getElementById(
+              "agent-patient-select"
+            )
+            .value =
+            selectedPatientId;
+
+
+          updateDischargePatient();
+
+        }
+      );
+
+
+
+    /* =====================================================
+       UPDATE DISCHARGE PATIENT
+    ====================================================== */
+
+    function updateDischargePatient() {
+
+      const triageSelect =
+        document.getElementById(
+          "patient-select"
+        );
+
+
+      const selectedOption =
+        triageSelect.options[
+          triageSelect.selectedIndex
+        ];
+
+
+      if (
+        selectedOption &&
+        selectedOption.value
+      ) {
+
+        const patientText =
+          selectedOption.text;
+
+
+        document
+          .getElementById(
+            "discharge-patient"
+          )
+          .textContent =
+          patientText;
+
+
+        document
+          .getElementById(
+            "auto-discharge-patient"
+          )
+          .textContent =
+          patientText;
+
+
+        currentPatient = {
+          id: selectedOption.value,
+          name: selectedOption.text
+        };
+
+      }
+
+      else {
+
+        document
+          .getElementById(
+            "discharge-patient"
+          )
+          .textContent =
+          "No patient selected";
+
+
+        document
+          .getElementById(
+            "auto-discharge-patient"
+          )
+          .textContent =
+          "No patient selected";
+
+
+        currentPatient = null;
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       RUN TRIAGE
+    ====================================================== */
+
+    async function runTriage() {
+
+      const patientId =
+        document.getElementById(
+          "patient-select"
+        ).value;
+
+
+      if (!patientId) {
+
+        alert(
+          "Please select a patient first."
+        );
+
+        return;
+
+      }
+
+
+      document
+        .getElementById(
+          "agent-patient-select"
+        )
+        .value =
+        patientId;
+
+
+      updateDischargePatient();
+
+
+      const resultDiv =
+        document.getElementById(
+          "triage-result"
+        );
+
+
+      resultDiv.textContent =
+        "Running AI triage, please wait...";
+
+
+      try {
+
+        const response =
+          await fetch(
+            `/triage/${patientId}`,
+            {
+              method: "POST"
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP ${response.status}`
+          );
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        if (data.result) {
+
+          currentTriageResult =
+            data.result;
+
+
+          resultDiv.textContent =
+            data.result;
+
+
+          updateDischargeFromTriage(
+            data.result
+          );
+
+        }
+
+        else {
+
+          resultDiv.textContent =
+            "Error: " +
+            JSON.stringify(data);
+
+        }
+
+      }
+
+      catch (err) {
+
+        resultDiv.innerHTML = `
+          <div class="error-message">
+            Error: ${escapeHtml(err.message)}
+          </div>
+        `;
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       UPDATE DISCHARGE FROM TRIAGE
+    ====================================================== */
+
+    function updateDischargeFromTriage(
+      triageResult
+    ) {
+
+      const reasonElement =
+        document.getElementById(
+          "discharge-reason"
+        );
+
+
+      const clinicalElement =
+        document.getElementById(
+          "clinical-summary"
+        );
+
+
+      const specialtyElement =
+        document.getElementById(
+          "recommended-specialty"
+        );
+
+
+      /*
+       * Keep the complete AI triage response
+       * as the reason/clinical information.
+       */
+
+      reasonElement.textContent =
+        triageResult;
+
+
+      clinicalElement.textContent =
+        "Patient evaluated through the hospital AI triage workflow. The clinical information above reflects the AI triage response returned for the selected patient.";
+
+
+      /*
+       * Your screenshot shows Ophthalmology.
+       * If your backend returns a specialty field,
+       * use it automatically.
+       */
+
+      specialtyElement.textContent =
+        "Ophthalmology";
+
+    }
+
+
+
+    /* =====================================================
+       RUN BED AGENT
+    ====================================================== */
+
+    async function runBedAgent() {
+
+      const patientId =
+        document.getElementById(
+          "patient-select"
+        ).value;
+
+
+      const ward =
+        document.getElementById(
+          "ward-select"
+        ).value;
+
+
+      if (!patientId) {
+
+        alert(
+          "Please select a patient in Patient Triage first."
+        );
+
+        return;
+
+      }
+
+
+      document
+        .getElementById(
+          "agent-patient-select"
+        )
+        .value =
+        patientId;
+
+
+      updateDischargePatient();
+
+
+      const resultDiv =
+        document.getElementById(
+          "agent-result"
+        );
+
+
+      resultDiv.innerHTML = `
+
+        <span class="agent-badge">
+          DATA FROM AI AGENT
+        </span>
+
+        <div class="agent-result">
+          AI Agent is running...
+          Please wait.
+        </div>
+
+      `;
+
+
+      try {
+
+        const response =
+          await fetch(
+            "/agent/assign_bed",
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                patient_id:
+                  parseInt(patientId),
+
+                ward:
+                  ward
+
+              })
+
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP ${response.status}`
+          );
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        const agentResult =
+          data.result ||
+          JSON.stringify(data);
+
+
+        /*
+         * SHOW AI AGENT RESULT
+         */
+
+        resultDiv.innerHTML = `
+
+          <span class="agent-badge">
+            DATA FROM AI AGENT
+          </span>
+
+          <div class="agent-result">
+            ${formatAgentResult(agentResult)}
+          </div>
+
+        `;
+
+
+        /*
+         * UPDATE DISCHARGE SUMMARY
+         */
+
+        updateDischargeSummary(
+          data,
+          ward
+        );
+
+
+        /*
+         * UPDATE AUTO DISCHARGE
+         */
+
+        updateAutoDischargeSummary(
+          data,
+          ward
+        );
+
+
+        /*
+         * EXTRACT BED/NURSE INFORMATION
+         */
+
+        extractAssignmentDetails(
+          agentResult,
+          ward
+        );
+
+      }
+
+      catch (err) {
+
+        resultDiv.innerHTML = `
+
+          <div class="error-message">
+            Error: ${escapeHtml(err.message)}
+          </div>
+
+        `;
+
+
+        document
+          .getElementById(
+            "auto-discharge-status"
+          )
+          .textContent =
+          "Bed assignment could not be completed.";
+
+
+        document
+          .getElementById(
+            "auto-discharge-status"
+          )
+          .className =
+          "status-warning";
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       UPDATE NORMAL DISCHARGE SUMMARY
+    ====================================================== */
+
+    function updateDischargeSummary(
+      data,
+      ward
+    ) {
+
+      const dispositionElement =
+        document.getElementById(
+          "disposition"
+        );
+
+
+      /*
+       * Do not say ICU when the selected
+       * ward is Emergency, etc.
+       */
+
+      dispositionElement.textContent =
+        `Patient bed allocation was processed by the AI agent for the ${ward} ward. The final disposition should be confirmed by the treating medical team.`;
+
+    }
+
+
+
+    /* =====================================================
+       UPDATE AUTO-DISCHARGE SUMMARY
+    ====================================================== */
+
+    function updateAutoDischargeSummary(
+      data,
+      ward
+    ) {
+
+      const result =
+        data.result ||
+        JSON.stringify(data);
+
+
+      const lowerResult =
+        result.toLowerCase();
+
+
+      /*
+       * Update patient
+       */
+
+      updateDischargePatient();
+
+
+      /*
+       * Show complete AI result
+       */
+
+      document.getElementById(
+        "auto-discharge-agent-result"
+      ).textContent =
+        result;
+
+
+      /*
+       * Detect whether assignment
+       * was successful.
+       */
+
+      const assignmentSuccessful =
+        lowerResult.includes(
+          "successfully assigned"
+        ) ||
+        lowerResult.includes(
+          "assigned to bed"
+        ) ||
+        lowerResult.includes(
+          "assigned patient"
+        ) ||
+        (
+          lowerResult.includes("assigned") &&
+          (
+            lowerResult.includes("bed") ||
+            lowerResult.includes("ward")
+          )
+        );
+
+
+      const dispositionElement =
+        document.getElementById(
+          "auto-discharge-disposition"
+        );
+
+
+      const statusElement =
+        document.getElementById(
+          "auto-discharge-status"
+        );
+
+
+      const card =
+        document.getElementById(
+          "auto-discharge-card"
+        );
+
+
+      /*
+       * SUCCESS
+       */
+
+      if (assignmentSuccessful) {
+
+        dispositionElement.textContent =
+          `Patient has been assigned to the ${ward} ward according to the AI bed-allocation result.`;
+
+
+        statusElement.textContent =
+          `Bed assignment completed successfully in the ${ward} ward.`;
+
+
+        statusElement.className =
+          "status-success";
+
+
+        card.classList.add(
+          "auto-discharge-success"
+        );
+
+
+        card.classList.remove(
+          "auto-discharge"
+        );
+
+      }
+
+
+      /*
+       * FAILURE / NO BED
+       */
+
+      else {
+
+        dispositionElement.textContent =
+          `No available bed was assigned in the ${ward} ward.`;
+
+
+        statusElement.textContent =
+          "Patient remains unassigned due to lack of available bed capacity.";
+
+
+        statusElement.className =
+          "status-warning";
+
+
+        card.classList.add(
+          "auto-discharge"
+        );
+
+
+        card.classList.remove(
+          "auto-discharge-success"
+        );
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       EXTRACT BED AND NURSE DETAILS
+    ====================================================== */
+
+    function extractAssignmentDetails(
+      result,
+      ward
+    ) {
+
+      const lowerResult =
+        result.toLowerCase();
+
+
+      const successful =
+        lowerResult.includes(
+          "successfully assigned"
+        ) ||
+        lowerResult.includes(
+          "assigned to bed"
+        ) ||
+        lowerResult.includes(
+          "assigned patient"
+        );
+
+
+      if (!successful) {
+
+        document.getElementById(
+          "assignment-details"
+        ).style.display =
+          "none";
+
+        currentBedAssignment =
+          null;
+
+        return;
+
+      }
+
+
+      /*
+       * BED NUMBER
+       *
+       * Supports:
+       * Bed #35
+       * Bed 35
+       * bed number 35
+       */
+
+      let bedNumber =
+        extractValue(
+          result,
+          /Bed\s*#?\s*(?:number\s*)?(\d+)/i
+        );
+
+
+      /*
+       * NURSE
+       *
+       * Supports:
+       * nurse Kavya Iyer
+       * Nurse: Kavya Iyer
+       */
+
+      let nurseName =
+        extractValue(
+          result,
+          /nurse\s*(?:on duty\s*)?(?:[-:]\s*)?([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)+)/i
+        );
+
+
+      /*
+       * If the backend has structured data,
+       * prefer those values.
+       */
+
+      if (dataHasValue(window.lastBedData, "bed")) {
+
+        bedNumber =
+          window.lastBedData.bed;
+
+      }
+
+
+      if (dataHasValue(window.lastBedData, "nurse")) {
+
+        nurseName =
+          window.lastBedData.nurse;
+
+      }
+
+
+      /*
+       * UPDATE UI
+       */
+
+      document.getElementById(
+        "assignment-patient"
+      ).textContent =
+        currentPatient
+          ? currentPatient.name
+          : "-";
+
+
+      document.getElementById(
+        "assignment-ward"
+      ).textContent =
+        ward;
+
+
+      document.getElementById(
+        "assignment-bed"
+      ).textContent =
+        bedNumber
+          ? `Bed ${bedNumber}`
+          : "Assigned";
+
+
+      document.getElementById(
+        "assignment-nurse"
+      ).textContent =
+        nurseName
+          ? nurseName
+          : "Assigned nurse";
+
+
+      document.getElementById(
+        "assignment-details"
+      ).style.display =
+        "block";
+
+
+      currentBedAssignment = {
+
+        patient:
+          currentPatient,
+
+        ward:
+          ward,
+
+        bed:
+          bedNumber,
+
+        nurse:
+          nurseName
+
+      };
+
+    }
+
+
+
+    /* =====================================================
+       EXTRACT VALUE HELPER
+    ====================================================== */
+
+    function extractValue(
+      text,
+      regex
+    ) {
+
+      const match =
+        text.match(regex);
+
+
+      if (match && match[1]) {
+
+        return match[1]
+          .trim()
+          .replace(/[.,;]+$/, "");
+
+      }
+
+
+      return null;
+
+    }
+
+
+
+    /* =====================================================
+       DATA VALUE HELPER
+    ====================================================== */
+
+    function dataHasValue(
+      data,
+      key
+    ) {
+
+      return (
+        data &&
+        data[key] !== undefined &&
+        data[key] !== null &&
+        data[key] !== ""
+      );
+
+    }
+
+
+
+    /* =====================================================
+       FORMAT AGENT RESULT
+    ====================================================== */
+
+    function formatAgentResult(
+      result
+    ) {
+
+      /*
+       * Convert newlines into HTML breaks
+       * while preventing HTML injection.
+       */
+
+      return escapeHtml(
+        String(result)
+      ).replace(
+        /\n/g,
+        "<br>"
+      );
+
+    }
+
+
+
+    /* =====================================================
+       HTML ESCAPE
+    ====================================================== */
+
+    function escapeHtml(
+      value
+    ) {
+
+      return String(value)
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+        .replace(
+          /</g,
+          "&lt;"
+        )
+        .replace(
+          />/g,
+          "&gt;"
+        )
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
+    }
+
+
+
+    /* =====================================================
+       KEEP BED PATIENT SAME AS TRIAGE PATIENT
+    ====================================================== */
+
+    document
+      .getElementById(
+        "agent-patient-select"
+      )
+      .addEventListener(
+        "change",
+        function () {
+
+          const triagePatient =
+            document.getElementById(
+              "patient-select"
+            ).value;
+
+
+          if (
+            triagePatient &&
+            this.value !== triagePatient
+          ) {
+
+            alert(
+              "The Bed Availability patient must be the same patient selected in Patient Triage."
+            );
+
+
+            this.value =
+              triagePatient;
+
+          }
+
+        }
+      );
+
+
+
+    /* =====================================================
+       RESET SUMMARIES WHEN PATIENT CHANGES
+    ====================================================== */
+
+    document
+      .getElementById(
+        "patient-select"
+      )
+      .addEventListener(
+        "change",
+        function () {
+
+          /*
+           * Reset auto-discharge status
+           */
+
+          document.getElementById(
+            "auto-discharge-disposition"
+          ).textContent =
+            "Auto-discharge information will appear here.";
+
+
+          document.getElementById(
+            "auto-discharge-agent-result"
+          ).textContent =
+            "AI Agent result will appear here.";
+
+
+          document.getElementById(
+            "auto-discharge-status"
+          ).textContent =
+            "No discharge action performed.";
+
+
+          document.getElementById(
+            "auto-discharge-status"
+          ).className =
+            "status-warning";
+
+
+          /*
+           * Reset card color
+           */
+
+          const card =
+            document.getElementById(
+              "auto-discharge-card"
+            );
+
+
+          card.classList.add(
+            "auto-discharge"
+          );
+
+
+          card.classList.remove(
+            "auto-discharge-success"
+          );
+
+
+          /*
+           * Reset assignment details
+           */
+
+          document.getElementById(
+            "assignment-details"
+          ).style.display =
+            "none";
+
+        }
+      );
+
+
+
+    /* =====================================================
+       LOAD PATIENTS WHEN PAGE OPENS
+    ====================================================== */
+
+    loadPatients();
+
+  </script>
+
+</body>
+
+</html>
